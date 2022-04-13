@@ -10,6 +10,9 @@ include('./partials/cdnlink.ejs') %>
       </h2>
     </div>
     <form class="mt-8 space-y-6" action="/users/login" method="POST">
+      <p class="text-[#ff0000] font-extrabold my-4">
+        <%= blocked %>
+      </p>
       <div class="rounded-md shadow-sm -space-y-px">
         <p class="text-[#ff0000] font-extrabold my-4"><%= requiredboth %></p>
         <div>
