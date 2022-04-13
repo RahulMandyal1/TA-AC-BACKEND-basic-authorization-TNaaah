@@ -35,6 +35,7 @@ router.get("/login", (req, res) => {
   let requiredboth = req.flash("requiredboth");
   let emailrequired = req.flash.emailrequired;
   let passwordrequired = req.flash.passwordrequired;
+  let blocked = req.flash.blocked;
 
   return res.render("usersignup", {
     noemail: notregistered,
@@ -42,6 +43,7 @@ router.get("/login", (req, res) => {
     requiredboth: requiredboth,
     emailrequired: emailrequired,
     passwordrequired: passwordrequired,
+    blocked : blocked
   });
 });
 //both required , passwordrequired , emailrequired , wrongpassword
@@ -79,6 +81,10 @@ router.post("/login", async (req, res) => {
       req.flash("notmatched", "password  is not matched");
       return res.redirect("/users/login");
     }
+    if(user.isblocked ===true){
+      req.flash("blocked", "sorry you are blocked");
+      return res.redirect("/users/login");
+    }
     if (isMatched) {
       req.session.userId = user._id;
       // console.log('This is the session object'+req.session.userId);
@@ -104,7 +110,7 @@ router.get("/logout", (req, res) => {
 router.get('/:id/block', async (req ,res)=>{
   try{
     let userId = req.params.id;
-    let user = await User.findByIdAndUpdate( userId , {isBlocked : true} , {new : true});
+    let user = await User.findByIdAndUpdate( userId ,{$set :{isblocked : true}}, {new : true});
     if(user){
       res.redirect('/products?alluser=user');
     }
@@ -119,7 +125,7 @@ router.get('/:id/unblock', async (req ,res)=>{
   console.log('coming inside  this one');
   let userId = req.params.id;
   try{
-    let user = await User.findByIdAndUpdate( userId , {isBlocked : false} , {new : true});
+    let user = await User.findByIdAndUpdate( userId ,{$set :{isblocked :false}}, {new : true});
     if(user){
       res.redirect('/products?alluser=user');
     }
