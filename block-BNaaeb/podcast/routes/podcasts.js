@@ -23,6 +23,9 @@ const upload = multer({ storage: storage });
 // render form to add podcasts
 router.get("/", auth.isUserLoggedIn, async (req, res) => {
   try {
+    if (req.user.isadmin) {
+      return res.redirect("/podcasts/dashboard");
+    }
     let userId = req.session.userId;
     let user = await User.findById(userId);
     // if the user plan is free
@@ -74,6 +77,9 @@ router.post(
 //if the user is admin
 router.get("/dashboard", async (req, res) => {
   try {
+    if (!req.user.isadmin) {
+      res.redirect("/podcasts");
+    }
     let podcasts = await Podcast.find({}).populate("userId");
     let podcastPlan = req.query.userplan;
 
@@ -114,13 +120,16 @@ router.get("/dashboard", async (req, res) => {
       let podcasts = await Podcast.find({ podcastplan: "premium" }).populate(
         "userId"
       );
-      return res.render("adminDashboard", { podcasts: podcasts });
+      return res.render("adminDashboard", {
+        podcasts: podcasts,
+        users: undefined,
+      });
     }
     // show all the podcast for the first time to the admin until the admin
     //filter  the products
     res.render("adminDashboard", { podcasts: podcasts, users: undefined });
   } catch (err) {
-    console.log("Getting an error in the in  the main homepage of the podcast");
+    res.redirect("/podcasts/dashboard");
   }
 });
 
@@ -159,8 +168,9 @@ router.post("/:id/edit", upload.single("image"), async (req, res) => {
     let id = req.params.id;
     req.body.image = req.file.filename;
     req.body.userId = req.session.userId;
-    let updatePodcast = Podcast.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updatePodcast) return console.log("not updaetd ");
+    let updatePodcast = await Podcast.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
     res.redirect("/podcasts/dashboard");
   } catch (err) {
     console.log(req.body);
@@ -173,6 +183,7 @@ router.get("/:id/delete", async (req, res) => {
   try {
     let id = req.params.id;
     let podcast = await Podcast.findByIdAndDelete(id, { new: true });
+    res.redirect("/podcasts/dashboard");
   } catch (err) {
     red.redirect("/podcasts/dashboard");
   }
